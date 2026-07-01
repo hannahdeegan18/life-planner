@@ -1,0 +1,1268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Focus Base — Life Planner</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
+<style>
+  :root{
+    --bg: #14161C;
+    --bg-elev: #1D2029;
+    --bg-elev-2: #242836;
+    --border: #2E3242;
+    --text: #E7E9F0;
+    --text-dim: #9AA0B4;
+    --text-faint: #656B80;
+
+    --tasks: #5B9FED;
+    --tasks-bg: rgba(91,159,237,0.12);
+    --cleaning: #4FD1C5;
+    --cleaning-bg: rgba(79,209,197,0.12);
+    --habits: #A78BFA;
+    --habits-bg: rgba(167,139,250,0.12);
+    --media: #F0B860;
+    --media-bg: rgba(240,184,96,0.12);
+    --movies: #5AC8E8;
+    --movies-bg: rgba(90,200,232,0.12);
+    --selfcare: #F1789A;
+    --selfcare-bg: rgba(241,120,154,0.12);
+    --goals: #F0865B;
+    --goals-bg: rgba(240,134,91,0.12);
+    --notes: #8A93A6;
+    --notes-bg: rgba(138,147,166,0.12);
+  }
+
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Manrope', system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  h1,h2,h3, .display{
+    font-family: 'Fraunces', Georgia, serif;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+  #root{min-height:100vh;}
+  ::selection{ background: var(--tasks); color: #0B0C10; }
+
+  button{ font-family: inherit; cursor:pointer; }
+  input, textarea, select{ font-family: inherit; }
+
+  .app{
+    display:flex;
+    min-height:100vh;
+  }
+
+  /* ---------- Sidebar ---------- */
+  .sidebar{
+    width: 220px;
+    flex-shrink:0;
+    background: var(--bg-elev);
+    border-right: 1px solid var(--border);
+    display:flex;
+    flex-direction:column;
+    padding: 22px 14px;
+    position: sticky;
+    top:0;
+    height: 100vh;
+  }
+  .brand{
+    padding: 4px 10px 20px 10px;
+  }
+  .brand .title{
+    font-size: 20px;
+    color: var(--text);
+    margin:0;
+    line-height:1.1;
+  }
+  .brand .sub{
+    font-size: 11.5px;
+    color: var(--text-faint);
+    margin-top: 4px;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+  }
+  .nav{
+    display:flex;
+    flex-direction:column;
+    gap: 2px;
+    flex:1;
+  }
+  .nav-item{
+    display:flex;
+    align-items:center;
+    gap: 10px;
+    padding: 9px 10px;
+    border-radius: 9px;
+    border:none;
+    background: transparent;
+    color: var(--text-dim);
+    font-size: 14px;
+    font-weight: 600;
+    text-align:left;
+    transition: background 0.15s ease, color 0.15s ease;
+  }
+  .nav-item:hover{ background: var(--bg-elev-2); color: var(--text); }
+  .nav-item.active{ background: var(--bg-elev-2); color: var(--text); }
+  .nav-icon{
+    width: 20px; height:20px;
+    flex-shrink:0;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .nav-icon svg{ width:100%; height:100%; }
+  .dot{
+    width: 9px; height:9px; border-radius:50%; flex-shrink:0;
+  }
+  .sidebar-footer{
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+    padding-top: 14px;
+    border-top: 1px solid var(--border);
+  }
+  .ghost-btn{
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    font-size: 12.5px;
+    font-weight: 600;
+    padding: 8px 10px;
+    border-radius: 8px;
+    transition: border-color 0.15s ease, color 0.15s ease;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:6px;
+  }
+  .ghost-btn:hover{ border-color: var(--text-faint); color: var(--text); }
+  .ghost-icon{ font-size:14px; line-height:1; flex-shrink:0; }
+
+  /* ---------- Mobile: collapse sidebar to an icon rail ---------- */
+  @media (max-width: 640px){
+    .sidebar{
+      width: 60px;
+      padding: 14px 6px;
+    }
+    .brand{
+      padding: 2px 0 16px 0;
+      display:flex;
+      justify-content:center;
+    }
+    .brand .title, .brand .sub{ display:none; }
+    .brand-mark{
+      display:flex;
+      width:32px; height:32px;
+      border-radius:9px;
+      background: var(--tasks);
+      color:#0B0C10;
+      align-items:center; justify-content:center;
+      font-family:'Fraunces', serif;
+      font-weight:700;
+      font-size:14px;
+    }
+    .nav-item{
+      flex-direction:column;
+      gap:3px;
+      padding: 10px 2px;
+      font-size: 9.5px;
+    }
+    .nav-label{
+      font-size: 9px;
+      white-space:nowrap;
+    }
+    .ghost-btn{ padding:9px 4px; font-size:0; }
+    .ghost-icon{ font-size:16px; }
+    .ghost-label{ display:none; }
+    .main{
+      padding: 20px 16px 50px 16px;
+    }
+    .grid-2{ grid-template-columns: 1fr; }
+    .add-row{ flex-direction:column; align-items:stretch; }
+    .add-row input, .add-row select{ width:100% !important; }
+  }
+  @media (min-width: 641px){
+    .brand-mark{ display:none; }
+  }
+
+  /* ---------- Main ---------- */
+  .main{
+    flex:1;
+    padding: 34px 40px 60px 40px;
+    max-width: 900px;
+  }
+  .section-header{
+    display:flex;
+    align-items:baseline;
+    gap: 12px;
+    margin-bottom: 22px;
+  }
+  .section-header h1{
+    font-size: 27px;
+    margin:0;
+  }
+  .section-underline{
+    height:3px;
+    width: 46px;
+    border-radius:2px;
+    margin-top:6px;
+  }
+  .section-count{
+    font-size:13px;
+    color: var(--text-faint);
+  }
+
+  .card{
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 16px 18px;
+    margin-bottom: 12px;
+  }
+
+  .add-row{
+    display:flex;
+    gap:8px;
+    margin-bottom: 18px;
+    flex-wrap: wrap;
+  }
+  .add-row input[type=text], .add-row input[type=date], .add-row select, .add-row textarea{
+    background: var(--bg-elev-2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 10px 12px;
+    border-radius: 9px;
+    font-size: 14px;
+    outline: none;
+  }
+  .add-row input[type=text]{ flex: 1 1 220px; }
+  .add-row input:focus, .add-row select:focus, .add-row textarea:focus{
+    border-color: var(--accent, var(--tasks));
+  }
+  .btn{
+    border:none;
+    color: #0B0C10;
+    font-weight: 700;
+    font-size: 13.5px;
+    padding: 10px 16px;
+    border-radius: 9px;
+    transition: filter 0.15s ease, transform 0.1s ease;
+  }
+  .btn:hover{ filter: brightness(1.08); }
+  .btn:active{ transform: scale(0.97); }
+
+  .item-row{
+    display:flex;
+    align-items:flex-start;
+    gap: 10px;
+  }
+  .checkbox{
+    width: 19px; height:19px;
+    border-radius: 6px;
+    border: 2px solid var(--border);
+    flex-shrink:0;
+    margin-top:2px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    transition: transform 0.15s ease;
+  }
+  .checkbox.checked{ transform: scale(1.06); }
+  .checkbox svg{ width:12px; height:12px; }
+  .item-text{
+    flex:1;
+    font-size: 14.5px;
+    line-height:1.4;
+  }
+  .item-text.done{
+    color: var(--text-faint);
+    text-decoration: line-through;
+  }
+  .item-meta{
+    font-size:12px;
+    color: var(--text-faint);
+    margin-top:2px;
+  }
+  .icon-btn{
+    background:none; border:none; color: var(--text-faint);
+    font-size: 15px; padding:4px 6px; border-radius:6px;
+    transition: color 0.15s ease, background 0.15s ease;
+  }
+  .icon-btn:hover{ color: #E7677A; background: rgba(255,255,255,0.05); }
+
+  .pill{
+    font-size: 11px;
+    font-weight:700;
+    padding: 3px 9px;
+    border-radius: 999px;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+  }
+
+  .empty-state{
+    color: var(--text-faint);
+    font-size: 14px;
+    padding: 30px 10px;
+    text-align:center;
+    border: 1px dashed var(--border);
+    border-radius: 12px;
+  }
+
+  /* Dashboard */
+  .affirmation-card{
+    background: linear-gradient(135deg, var(--selfcare-bg), transparent);
+    border: 1px solid var(--selfcare);
+    border-radius: 16px;
+    padding: 22px 24px;
+    margin-bottom: 26px;
+    position:relative;
+  }
+  .affirmation-text{
+    font-family:'Fraunces', serif;
+    font-size: 19px;
+    font-weight:500;
+    line-height:1.4;
+    margin:0;
+    padding-right: 40px;
+  }
+  .shuffle-btn{
+    position:absolute; top:18px; right:18px;
+    background: var(--bg-elev-2);
+    border:1px solid var(--border);
+    color: var(--text-dim);
+    width:32px; height:32px; border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    font-size:15px;
+  }
+  .shuffle-btn:hover{ color: var(--selfcare); border-color: var(--selfcare); }
+
+  .grid-2{
+    display:grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+  @media (max-width: 720px){
+    .grid-2{ grid-template-columns: 1fr; }
+  }
+
+  .module{
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 18px 20px;
+  }
+  .module-header{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    margin-bottom: 12px;
+  }
+  .module-header h3{
+    font-size: 15px;
+    margin:0;
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+  .module-link{
+    font-size: 12px;
+    color: var(--text-faint);
+    text-decoration:none;
+    font-weight:600;
+    background:none;
+    border:none;
+  }
+  .module-link:hover{ color: var(--text); }
+
+  /* Habit tracker dots */
+  .habit-row{
+    display:flex;
+    align-items:center;
+    gap: 10px;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .habit-row:last-child{ border-bottom:none; }
+  .habit-name{ flex:1; font-size:14px; }
+  .habit-streak{
+    font-size:12px;
+    color: var(--habits);
+    font-weight:700;
+    min-width: 48px;
+    text-align:right;
+  }
+  .week-dots{ display:flex; gap:5px; }
+  .week-dot{
+    width:18px; height:18px; border-radius:6px;
+    border:1px solid var(--border);
+    display:flex; align-items:center; justify-content:center;
+    font-size:0;
+  }
+  .week-dot.on{ background: var(--habits); border-color: var(--habits); }
+
+  /* Cleaning */
+  .room-tag{
+    font-size:11px;
+    color: var(--cleaning);
+    background: var(--cleaning-bg);
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-weight:700;
+  }
+
+  /* Media list */
+  .media-grid{
+    display:grid;
+    grid-template-columns: repeat(auto-fill, minmax(230px,1fr));
+    gap: 12px;
+  }
+  .stars{ color: var(--media); font-size:13px; letter-spacing:1px;}
+
+  /* Goals */
+  .progress-track{
+    height:8px;
+    background: var(--bg-elev-2);
+    border-radius: 999px;
+    overflow:hidden;
+    margin: 8px 0 4px 0;
+  }
+  .progress-fill{
+    height:100%;
+    border-radius: 999px;
+    transition: width 0.3s ease;
+  }
+  .milestone-row{
+    display:flex; align-items:center; gap:8px; padding: 5px 0;
+  }
+
+  /* Notes */
+  .note-card{
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--notes);
+    border-radius: 10px;
+    padding: 14px 16px;
+    margin-bottom: 10px;
+  }
+  .note-card h4{ margin:0 0 6px 0; font-size:14.5px; }
+  .note-card p{ margin:0; font-size:13.5px; color: var(--text-dim); white-space:pre-wrap; line-height:1.5; }
+  .note-card textarea{
+    width:100%;
+    background: var(--bg-elev-2);
+    border:1px solid var(--border);
+    color: var(--text);
+    border-radius:8px;
+    padding:8px 10px;
+    font-size:13.5px;
+    resize: vertical;
+    min-height: 70px;
+  }
+
+  select, .add-row input[type=date]{ color-scheme: dark; }
+
+  .tabs-inline{
+    display:flex; gap:6px; margin-bottom:14px;
+  }
+  .tabs-inline button{
+    background: var(--bg-elev-2);
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    padding: 6px 13px;
+    border-radius: 999px;
+    font-size:12.5px;
+    font-weight:700;
+  }
+  .tabs-inline button.active{
+    color: #0B0C10;
+  }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel">
+const { useState, useEffect, useMemo, useRef } = React;
+
+/* ---------- Sections config ---------- */
+const SECTIONS = [
+  { key: "dashboard", label: "Today", color: "var(--tasks)", icon: "home" },
+  { key: "tasks", label: "Tasks", color: "var(--tasks)", icon: "check" },
+  { key: "cleaning", label: "Cleaning", color: "var(--cleaning)", icon: "sparkle" },
+  { key: "habits", label: "Habits", color: "var(--habits)", icon: "flame" },
+  { key: "reading", label: "Reading", color: "var(--media)", icon: "book" },
+  { key: "movies", label: "Movies & Shows", color: "var(--movies)", icon: "film" },
+  { key: "selfcare", label: "Self-Care", color: "var(--selfcare)", icon: "heart" },
+  { key: "goals", label: "Goals", color: "var(--goals)", icon: "target" },
+  { key: "notes", label: "Notes", color: "var(--notes)", icon: "note" },
+];
+
+const ICON_PATHS = {
+  home: <path d="M3 9.5L10 4l7 5.5M5 8.5v7A1 1 0 006 16.5h3v-4.5h2v4.5h3a1 1 0 001-1v-7" />,
+  check: <>
+    <rect x="3.5" y="3.5" width="13" height="13" rx="3" />
+    <path d="M7 10l2 2 4-4" />
+  </>,
+  sparkle: <>
+    <path d="M12.5 3l3 3-8 8-4 1 1-4 8-8z" />
+    <path d="M4.5 15.5l-1 1" />
+  </>,
+  flame: <path d="M10 2.5c-.7 2.3-3.3 3-3.3 6.3a3.3 3.3 0 006.6 0c0-1.4-.6-2.1-.6-2.1s.5 2-.8 2.8c-.7-.6-.7-1.9-1.2-2A5 5 0 0110 2.5z" />,
+  book: <>
+    <path d="M4 4.5h5.3v12H4a1 1 0 01-1-1v-10a1 1 0 011-1z" />
+    <path d="M9.3 4.5H15a1 1 0 011 1v10a1 1 0 01-1 1H9.3" />
+  </>,
+  film: <>
+    <rect x="3" y="7" width="14" height="10" rx="1.3" />
+    <path d="M3.6 7l2.2-3.5h2.6L6.2 7zM8.6 7l2.2-3.5h2.6L10.8 7zM13.6 7l1.6-3.5h1.4L15.2 7z" />
+  </>,
+  heart: <path d="M10 16.3S3.8 12 3.8 7.6A3.3 3.3 0 0110 5.4a3.3 3.3 0 016.2 2.2c0 4.4-6.2 8.7-6.2 8.7z" />,
+  target: <>
+    <circle cx="10" cy="10" r="6.7" />
+    <circle cx="10" cy="10" r="3.6" />
+    <circle cx="10" cy="10" r="0.9" fill="currentColor" />
+  </>,
+  note: <>
+    <rect x="4" y="3" width="12" height="14" rx="1.4" />
+    <path d="M6.8 7h6.4M6.8 10h6.4M6.8 13h4" />
+  </>,
+};
+
+function SectionIcon({name, color}){
+  return (
+    <svg viewBox="0 0 20 20" fill="none" stroke={color} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+      {ICON_PATHS[name]}
+    </svg>
+  );
+}
+
+const uid = () => Math.random().toString(36).slice(2, 10);
+const todayKey = () => new Date().toISOString().slice(0,10);
+const dayLabels = ["S","M","T","W","T","F","S"];
+
+function lastNDays(n){
+  const out = [];
+  for(let i=n-1;i>=0;i--){
+    const d = new Date();
+    d.setDate(d.getDate()-i);
+    out.push(d.toISOString().slice(0,10));
+  }
+  return out;
+}
+
+/* ---------- Persistence ---------- */
+const STORAGE_KEY = "focusbase-planner-v1";
+
+function loadInitial(){
+  try{
+    const raw = window.localStorage.getItem(STORAGE_KEY);
+    if(raw) return migrateData(JSON.parse(raw));
+  }catch(e){ /* storage unavailable, fall through */ }
+  return null;
+}
+
+const DEFAULT_QUOTES = [
+  "Progress, not perfection.",
+  "You don't have to finish it today. You just have to start.",
+  "Rest is productive too.",
+  "One task at a time is still moving forward.",
+  "Done is better than perfect.",
+  "Your brain works differently, not wrongly.",
+  "Small steps still count as steps.",
+  "It's okay to close the tab and come back later.",
+];
+
+function defaultData(){
+  return {
+    tasks: [],
+    cleaning: [],
+    habits: [],
+    books: [],
+    movies: [],
+    goals: [],
+    notes: [],
+    quotes: DEFAULT_QUOTES.map(t => ({ id: uid(), text: t })),
+  };
+}
+
+function migrateData(d){
+  if(!d) return d;
+  if(d.media && (!d.books || !d.movies)){
+    const stripType = ({type, ...rest}) => rest;
+    const books = d.media.filter(m => m.type === "book").map(stripType);
+    const movies = d.media.filter(m => m.type !== "book").map(stripType);
+    return {...d, books: d.books || books, movies: d.movies || movies};
+  }
+  return d;
+}
+
+function useAppData(){
+  const [data, setData] = useState(() => loadInitial() || defaultData());
+  const [saveState, setSaveState] = useState("idle"); // idle | saved | unavailable
+
+  useEffect(() => {
+    try{
+      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+      setSaveState("saved");
+    }catch(e){
+      setSaveState("unavailable");
+    }
+  }, [data]);
+
+  return [data, setData, saveState];
+}
+
+/* ---------- Small UI bits ---------- */
+function Check({checked}){
+  if(!checked) return null;
+  return (
+    <svg viewBox="0 0 24 24" fill="none">
+      <path d="M4 12l5 5L20 6" stroke="#0B0C10" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round"/>
+    </svg>
+  );
+}
+
+function Checkbox({checked, onClick, color}){
+  return (
+    <button
+      className={"checkbox" + (checked ? " checked" : "")}
+      style={{ background: checked ? color : "transparent", borderColor: checked ? color : undefined }}
+      onClick={onClick}
+      aria-label={checked ? "Mark as not done" : "Mark as done"}
+    >
+      <Check checked={checked} />
+    </button>
+  );
+}
+
+function EmptyState({text}){
+  return <div className="empty-state">{text}</div>;
+}
+
+/* ---------- Sidebar ---------- */
+function Sidebar({active, setActive, onExport, onImport}){
+  const fileRef = useRef();
+  return (
+    <div className="sidebar">
+      <div className="brand">
+        <span className="brand-mark">FB</span>
+        <p className="title">Focus Base</p>
+        <p className="sub">Life Planner</p>
+      </div>
+      <div className="nav">
+        {SECTIONS.map(s => {
+          const isActive = active === s.key;
+          return (
+            <button
+              key={s.key}
+              className={"nav-item" + (isActive ? " active" : "")}
+              onClick={() => setActive(s.key)}
+              title={s.label}
+            >
+              <span className="nav-icon"><SectionIcon name={s.icon} color={s.color} /></span>
+              <span className="nav-label">{s.label}</span>
+            </button>
+          );
+        })}
+      </div>
+      <div className="sidebar-footer">
+        <button className="ghost-btn" onClick={onExport} title="Export backup (.json)">
+          <span className="ghost-icon">⭳</span><span className="ghost-label">Export backup (.json)</span>
+        </button>
+        <button className="ghost-btn" onClick={() => fileRef.current.click()} title="Import backup">
+          <span className="ghost-icon">⭱</span><span className="ghost-label">Import backup</span>
+        </button>
+        <input ref={fileRef} type="file" accept="application/json" style={{display:"none"}} onChange={onImport} />
+      </div>
+    </div>
+  );
+}
+
+/* ================= TASKS ================= */
+function TasksView({data, setData}){
+  const [text, setText] = useState("");
+  const [priority, setPriority] = useState("medium");
+  const [due, setDue] = useState("");
+
+  const addTask = () => {
+    if(!text.trim()) return;
+    setData(d => ({...d, tasks: [{ id: uid(), text: text.trim(), priority, due, done:false, subtasks: [] }, ...d.tasks]}));
+    setText(""); setDue("");
+  };
+
+  const toggle = (id) => setData(d => ({...d, tasks: d.tasks.map(t => t.id===id ? {...t, done: !t.done} : t)}));
+  const remove = (id) => setData(d => ({...d, tasks: d.tasks.filter(t => t.id!==id)}));
+  const addSubtask = (taskId, subText) => {
+    if(!subText.trim()) return;
+    setData(d => ({...d, tasks: d.tasks.map(t => t.id===taskId ? {...t, subtasks:[...t.subtasks, {id:uid(), text:subText.trim(), done:false}]} : t)}));
+  };
+  const toggleSubtask = (taskId, subId) => {
+    setData(d => ({...d, tasks: d.tasks.map(t => t.id===taskId ? {...t, subtasks: t.subtasks.map(s => s.id===subId ? {...s, done:!s.done} : s)} : t)}));
+  };
+  const removeSubtask = (taskId, subId) => {
+    setData(d => ({...d, tasks: d.tasks.map(t => t.id===taskId ? {...t, subtasks: t.subtasks.filter(s => s.id!==subId)} : t)}));
+  };
+
+  const priorityColor = { high: "#F1789A", medium: "#5B9FED", low: "#656B80" };
+  const sorted = [...data.tasks].sort((a,b) => (a.done - b.done) || ({high:0,medium:1,low:2}[a.priority] - {high:0,medium:1,low:2}[b.priority]));
+
+  return (
+    <div>
+      <SectionHeader label="Tasks" color="var(--tasks)" count={data.tasks.filter(t=>!t.done).length + " open"} />
+      <div className="add-row" style={{"--accent":"var(--tasks)"}}>
+        <input type="text" placeholder="Add a task…" value={text} onChange={e=>setText(e.target.value)} onKeyDown={e=>e.key==="Enter" && addTask()} />
+        <select value={priority} onChange={e=>setPriority(e.target.value)}>
+          <option value="high">High priority</option>
+          <option value="medium">Medium priority</option>
+          <option value="low">Low priority</option>
+        </select>
+        <input type="date" value={due} onChange={e=>setDue(e.target.value)} />
+        <button className="btn" style={{background:"var(--tasks)"}} onClick={addTask}>Add</button>
+      </div>
+
+      {sorted.length===0 && <EmptyState text="No tasks yet. Add the first thing on your mind — you can break it into steps after." />}
+
+      {sorted.map(t => (
+        <TaskCard key={t.id} task={t} priorityColor={priorityColor[t.priority]}
+          onToggle={()=>toggle(t.id)} onRemove={()=>remove(t.id)}
+          onAddSub={(txt)=>addSubtask(t.id, txt)} onToggleSub={(sid)=>toggleSubtask(t.id, sid)} onRemoveSub={(sid)=>removeSubtask(t.id, sid)} />
+      ))}
+    </div>
+  );
+}
+
+function TaskCard({task, priorityColor, onToggle, onRemove, onAddSub, onToggleSub, onRemoveSub}){
+  const [subText, setSubText] = useState("");
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="card">
+      <div className="item-row">
+        <Checkbox checked={task.done} onClick={onToggle} color="var(--tasks)" />
+        <div style={{flex:1}}>
+          <div className={"item-text" + (task.done ? " done" : "")}>{task.text}</div>
+          <div className="item-meta" style={{display:"flex", gap:8, alignItems:"center", marginTop:4}}>
+            <span className="pill" style={{color: priorityColor, background: priorityColor+"22"}}>{task.priority}</span>
+            {task.due && <span>Due {task.due}</span>}
+            {task.subtasks.length>0 && <span>{task.subtasks.filter(s=>s.done).length}/{task.subtasks.length} steps</span>}
+            <button className="module-link" onClick={()=>setOpen(o=>!o)}>{open?"Hide steps":"Steps"}</button>
+          </div>
+        </div>
+        <button className="icon-btn" onClick={onRemove}>✕</button>
+      </div>
+      {open && (
+        <div style={{marginTop:10, marginLeft:29}}>
+          {task.subtasks.map(s => (
+            <div key={s.id} className="item-row" style={{marginBottom:6}}>
+              <Checkbox checked={s.done} onClick={()=>onToggleSub(s.id)} color="var(--tasks)" />
+              <div className={"item-text" + (s.done?" done":"")} style={{fontSize:13.5}}>{s.text}</div>
+              <button className="icon-btn" onClick={()=>onRemoveSub(s.id)}>✕</button>
+            </div>
+          ))}
+          <div style={{display:"flex", gap:6, marginTop:6}}>
+            <input type="text" placeholder="Break it into a smaller step…" value={subText}
+              onChange={e=>setSubText(e.target.value)}
+              onKeyDown={e=>{ if(e.key==="Enter"){ onAddSub(subText); setSubText(""); } }}
+              style={{flex:1, background:"var(--bg-elev-2)", border:"1px solid var(--border)", color:"var(--text)", borderRadius:8, padding:"7px 10px", fontSize:13}} />
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ================= CLEANING ================= */
+const FREQS = ["Daily","Weekly","Monthly"];
+function CleaningView({data, setData}){
+  const [text, setText] = useState("");
+  const [room, setRoom] = useState("");
+  const [freq, setFreq] = useState("Weekly");
+  const [filter, setFilter] = useState("All");
+
+  const add = () => {
+    if(!text.trim()) return;
+    setData(d => ({...d, cleaning:[{id:uid(), text:text.trim(), room: room.trim()||"General", freq, done:false}, ...d.cleaning]}));
+    setText(""); setRoom("");
+  };
+  const toggle = (id) => setData(d => ({...d, cleaning: d.cleaning.map(c=>c.id===id?{...c,done:!c.done}:c)}));
+  const remove = (id) => setData(d => ({...d, cleaning: d.cleaning.filter(c=>c.id!==id)}));
+  const resetAll = () => setData(d => ({...d, cleaning: d.cleaning.map(c=>({...c, done:false}))}));
+
+  const filtered = data.cleaning.filter(c => filter==="All" || c.freq===filter);
+
+  return (
+    <div>
+      <SectionHeader label="Cleaning Schedule" color="var(--cleaning)" count={data.cleaning.filter(c=>!c.done).length + " remaining"} />
+      <div className="add-row" style={{"--accent":"var(--cleaning)"}}>
+        <input type="text" placeholder="Add a cleaning task…" value={text} onChange={e=>setText(e.target.value)} onKeyDown={e=>e.key==="Enter"&&add()} />
+        <input type="text" placeholder="Room (optional)" value={room} onChange={e=>setRoom(e.target.value)} style={{width:130}} />
+        <select value={freq} onChange={e=>setFreq(e.target.value)}>
+          {FREQS.map(f=><option key={f} value={f}>{f}</option>)}
+        </select>
+        <button className="btn" style={{background:"var(--cleaning)"}} onClick={add}>Add</button>
+      </div>
+
+      <div style={{display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:14}}>
+        <div className="tabs-inline">
+          {["All", ...FREQS].map(f => (
+            <button key={f} className={filter===f?"active":""} style={filter===f?{background:"var(--cleaning)", borderColor:"var(--cleaning)"}:{}} onClick={()=>setFilter(f)}>{f}</button>
+          ))}
+        </div>
+        <button className="ghost-btn" onClick={resetAll}>Reset checklist</button>
+      </div>
+
+      {filtered.length===0 && <EmptyState text="Nothing here yet. Add tasks by room and how often they repeat." />}
+      {filtered.map(c => (
+        <div key={c.id} className="card item-row">
+          <Checkbox checked={c.done} onClick={()=>toggle(c.id)} color="var(--cleaning)" />
+          <div style={{flex:1}}>
+            <div className={"item-text"+(c.done?" done":"")}>{c.text}</div>
+            <div className="item-meta" style={{display:"flex", gap:8, marginTop:4}}>
+              <span className="room-tag">{c.room}</span>
+              <span>{c.freq}</span>
+            </div>
+          </div>
+          <button className="icon-btn" onClick={()=>remove(c.id)}>✕</button>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/* ================= HABITS ================= */
+function computeStreak(history){
+  let streak = 0;
+  let d = new Date();
+  while(true){
+    const key = d.toISOString().slice(0,10);
+    if(history[key]){ streak++; d.setDate(d.getDate()-1); } else break;
+  }
+  return streak;
+}
+
+function HabitsView({data, setData}){
+  const [name, setName] = useState("");
+  const week = lastNDays(7);
+
+  const add = () => {
+    if(!name.trim()) return;
+    setData(d => ({...d, habits:[...d.habits, {id:uid(), name:name.trim(), history:{}}]}));
+    setName("");
+  };
+  const remove = (id) => setData(d => ({...d, habits: d.habits.filter(h=>h.id!==id)}));
+  const toggleDay = (id, day) => {
+    setData(d => ({...d, habits: d.habits.map(h => h.id===id ? {...h, history:{...h.history, [day]: !h.history[day]}} : h)}));
+  };
+
+  return (
+    <div>
+      <SectionHeader label="Habit Tracker" color="var(--habits)" count={data.habits.length + " habits"} />
+      <div className="add-row" style={{"--accent":"var(--habits)"}}>
+        <input type="text" placeholder="Add a habit to track…" value={name} onChange={e=>setName(e.target.value)} onKeyDown={e=>e.key==="Enter"&&add()} />
+        <button className="btn" style={{background:"var(--habits)"}} onClick={add}>Add</button>
+      </div>
+
+      {data.habits.length===0 && <EmptyState text="Add a habit — something small and repeatable, like 'drink water' or 'take meds'." />}
+
+      {data.habits.map(h => (
+        <div key={h.id} className="card">
+          <div className="habit-row" style={{borderBottom:"none", paddingBottom:0}}>
+            <div className="habit-name">{h.name}</div>
+            <div className="habit-streak">🔥 {computeStreak(h.history)}</div>
+            <button className="icon-btn" onClick={()=>remove(h.id)}>✕</button>
+          </div>
+          <div className="week-dots" style={{marginTop:10}}>
+            {week.map(day => {
+              const on = !!h.history[day];
+              const label = dayLabels[new Date(day).getDay()];
+              return (
+                <button key={day} className={"week-dot" + (on?" on":"")} title={day} onClick={()=>toggleDay(h.id, day)}>
+                  {label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/* ================= MEDIA (Reading / Movies & Shows) ================= */
+function MediaSection({data, setData, storeKey, label, colorVar, colorBgVar, addPlaceholder}){
+  const [title, setTitle] = useState("");
+  const [tab, setTab] = useState("want");
+  const list = data[storeKey];
+
+  const add = () => {
+    if(!title.trim()) return;
+    setData(d => ({...d, [storeKey]: [{id:uid(), title:title.trim(), status:"want", rating:0, notes:""}, ...d[storeKey]]}));
+    setTitle("");
+  };
+  const remove = (id) => setData(d => ({...d, [storeKey]: d[storeKey].filter(m=>m.id!==id)}));
+  const setStatus = (id, status) => setData(d => ({...d, [storeKey]: d[storeKey].map(m=>m.id===id?{...m,status}:m)}));
+  const setRating = (id, rating) => setData(d => ({...d, [storeKey]: d[storeKey].map(m=>m.id===id?{...m,rating}:m)}));
+  const setNotes = (id, notes) => setData(d => ({...d, [storeKey]: d[storeKey].map(m=>m.id===id?{...m,notes}:m)}));
+
+  const filtered = list.filter(m => m.status===tab);
+
+  return (
+    <div>
+      <SectionHeader label={label} color={colorVar} count={list.length + " total"} />
+      <div className="add-row" style={{"--accent":colorVar}}>
+        <input type="text" placeholder={addPlaceholder} value={title} onChange={e=>setTitle(e.target.value)} onKeyDown={e=>e.key==="Enter"&&add()} />
+        <button className="btn" style={{background:colorVar}} onClick={add}>Add</button>
+      </div>
+
+      <div className="tabs-inline">
+        <button className={tab==="want"?"active":""} style={tab==="want"?{background:colorVar, borderColor:colorVar}:{}} onClick={()=>setTab("want")}>Want to</button>
+        <button className={tab==="done"?"active":""} style={tab==="done"?{background:colorVar, borderColor:colorVar}:{}} onClick={()=>setTab("done")}>Completed</button>
+      </div>
+
+      {filtered.length===0 && <EmptyState text={tab==="want" ? "Nothing on the list yet." : "Nothing marked complete yet."} />}
+
+      <div className="media-grid">
+        {filtered.map(m => (
+          <div key={m.id} className="card" style={{marginBottom:0}}>
+            <div style={{display:"flex", justifyContent:"flex-end"}}>
+              <button className="icon-btn" onClick={()=>remove(m.id)}>✕</button>
+            </div>
+            <div style={{fontSize:14.5, fontWeight:600, margin:"2px 0 6px 0"}}>{m.title}</div>
+            <div className="stars">
+              {[1,2,3,4,5].map(n => (
+                <span key={n} style={{cursor:"pointer"}} onClick={()=>setRating(m.id, n)}>{n<=m.rating ? "★" : "☆"}</span>
+              ))}
+            </div>
+            {m.status==="done" && (
+              <textarea
+                placeholder="Quick review notes…"
+                value={m.notes}
+                onChange={e=>setNotes(m.id, e.target.value)}
+                style={{width:"100%", marginTop:10, background:"var(--bg-elev-2)", border:"1px solid var(--border)", color:"var(--text)", borderRadius:8, padding:"8px 10px", fontSize:13, resize:"vertical", minHeight:56}}
+              />
+            )}
+            <div style={{marginTop:10}}>
+              {m.status==="want"
+                ? <button className="ghost-btn" onClick={()=>setStatus(m.id,"done")}>Mark completed</button>
+                : <button className="ghost-btn" onClick={()=>setStatus(m.id,"want")}>Move back to want-to</button>}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ================= SELF-CARE ================= */
+function SelfCareView({data, setData}){
+  const [text, setText] = useState("");
+  const add = () => {
+    if(!text.trim()) return;
+    setData(d => ({...d, quotes:[{id:uid(), text:text.trim()}, ...d.quotes]}));
+    setText("");
+  };
+  const remove = (id) => setData(d => ({...d, quotes: d.quotes.filter(q=>q.id!==id)}));
+
+  return (
+    <div>
+      <SectionHeader label="Self-Care & Reminders" color="var(--selfcare)" count={data.quotes.length + " saved"} />
+      <div className="add-row" style={{"--accent":"var(--selfcare)"}}>
+        <input type="text" placeholder="Add a reminder or affirmation…" value={text} onChange={e=>setText(e.target.value)} onKeyDown={e=>e.key==="Enter"&&add()} />
+        <button className="btn" style={{background:"var(--selfcare)"}} onClick={add}>Add</button>
+      </div>
+      {data.quotes.map(q => (
+        <div key={q.id} className="card item-row">
+          <div className="item-text" style={{fontFamily:"'Fraunces', serif", fontSize:15}}>{q.text}</div>
+          <button className="icon-btn" onClick={()=>remove(q.id)}>✕</button>
+        </div>
+      ))}
+      <p style={{fontSize:12.5, color:"var(--text-faint)", marginTop:10}}>
+        These rotate on your Today dashboard. To use one as a phone reminder or widget text, copy it into your phone's Reminders or widget app.
+      </p>
+    </div>
+  );
+}
+
+/* ================= GOALS ================= */
+function GoalsView({data, setData}){
+  const [title, setTitle] = useState("");
+  const add = () => {
+    if(!title.trim()) return;
+    setData(d => ({...d, goals:[{id:uid(), title:title.trim(), milestones:[]}, ...d.goals]}));
+    setTitle("");
+  };
+  const remove = (id) => setData(d => ({...d, goals: d.goals.filter(g=>g.id!==id)}));
+  const addMilestone = (goalId, text) => {
+    if(!text.trim()) return;
+    setData(d => ({...d, goals: d.goals.map(g=>g.id===goalId ? {...g, milestones:[...g.milestones,{id:uid(), text:text.trim(), done:false}]} : g)}));
+  };
+  const toggleMilestone = (goalId, mId) => {
+    setData(d => ({...d, goals: d.goals.map(g=>g.id===goalId ? {...g, milestones: g.milestones.map(m=>m.id===mId?{...m,done:!m.done}:m)} : g)}));
+  };
+  const removeMilestone = (goalId, mId) => {
+    setData(d => ({...d, goals: d.goals.map(g=>g.id===goalId ? {...g, milestones: g.milestones.filter(m=>m.id!==mId)} : g)}));
+  };
+
+  return (
+    <div>
+      <SectionHeader label="Goals" color="var(--goals)" count={data.goals.length + " active"} />
+      <div className="add-row" style={{"--accent":"var(--goals)"}}>
+        <input type="text" placeholder="Add a goal…" value={title} onChange={e=>setTitle(e.target.value)} onKeyDown={e=>e.key==="Enter"&&add()} />
+        <button className="btn" style={{background:"var(--goals)"}} onClick={add}>Add</button>
+      </div>
+      {data.goals.length===0 && <EmptyState text="Add a goal, then break it into milestones you can check off." />}
+      {data.goals.map(g => <GoalCard key={g.id} goal={g} onRemove={()=>remove(g.id)} onAddM={(t)=>addMilestone(g.id,t)} onToggleM={(id)=>toggleMilestone(g.id,id)} onRemoveM={(id)=>removeMilestone(g.id,id)} />)}
+    </div>
+  );
+}
+
+function GoalCard({goal, onRemove, onAddM, onToggleM, onRemoveM}){
+  const [mText, setMText] = useState("");
+  const total = goal.milestones.length;
+  const done = goal.milestones.filter(m=>m.done).length;
+  const pct = total ? Math.round((done/total)*100) : 0;
+
+  return (
+    <div className="card">
+      <div style={{display:"flex", justifyContent:"space-between", alignItems:"center"}}>
+        <div style={{fontWeight:700, fontSize:15}}>{goal.title}</div>
+        <button className="icon-btn" onClick={onRemove}>✕</button>
+      </div>
+      <div className="progress-track">
+        <div className="progress-fill" style={{width:pct+"%", background:"var(--goals)"}}></div>
+      </div>
+      <div style={{fontSize:12, color:"var(--text-faint)"}}>{done}/{total} milestones · {pct}%</div>
+
+      <div style={{marginTop:10}}>
+        {goal.milestones.map(m => (
+          <div key={m.id} className="milestone-row">
+            <Checkbox checked={m.done} onClick={()=>onToggleM(m.id)} color="var(--goals)" />
+            <div className={"item-text"+(m.done?" done":"")} style={{fontSize:13.5, flex:1}}>{m.text}</div>
+            <button className="icon-btn" onClick={()=>onRemoveM(m.id)}>✕</button>
+          </div>
+        ))}
+        <div style={{display:"flex", gap:6, marginTop:8}}>
+          <input type="text" placeholder="Add a milestone…" value={mText} onChange={e=>setMText(e.target.value)}
+            onKeyDown={e=>{ if(e.key==="Enter"){ onAddM(mText); setMText(""); } }}
+            style={{flex:1, background:"var(--bg-elev-2)", border:"1px solid var(--border)", color:"var(--text)", borderRadius:8, padding:"7px 10px", fontSize:13}} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ================= NOTES ================= */
+function NotesView({data, setData}){
+  const [title, setTitle] = useState("");
+  const add = () => {
+    setData(d => ({...d, notes:[{id:uid(), title: title.trim() || "Untitled note", content:"", updatedAt: Date.now()}, ...d.notes]}));
+    setTitle("");
+  };
+  const update = (id, content) => setData(d => ({...d, notes: d.notes.map(n=>n.id===id?{...n, content, updatedAt: Date.now()}:n)}));
+  const remove = (id) => setData(d => ({...d, notes: d.notes.filter(n=>n.id!==id)}));
+
+  return (
+    <div>
+      <SectionHeader label="Notes" color="var(--notes)" count={data.notes.length + " notes"} />
+      <div className="add-row" style={{"--accent":"var(--notes)"}}>
+        <input type="text" placeholder="New note title…" value={title} onChange={e=>setTitle(e.target.value)} onKeyDown={e=>e.key==="Enter"&&add()} />
+        <button className="btn" style={{background:"var(--notes)"}} onClick={add}>Add note</button>
+      </div>
+      {data.notes.length===0 && <EmptyState text="A catch-all for brain dumps, random lists, and things that don't fit anywhere else." />}
+      {data.notes.map(n => (
+        <div key={n.id} className="note-card">
+          <div style={{display:"flex", justifyContent:"space-between", alignItems:"center"}}>
+            <h4>{n.title}</h4>
+            <button className="icon-btn" onClick={()=>remove(n.id)}>✕</button>
+          </div>
+          <textarea value={n.content} placeholder="Start typing…" onChange={e=>update(n.id, e.target.value)} />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/* ================= DASHBOARD ================= */
+function Dashboard({data, setData, setActive}){
+  const [quoteIdx, setQuoteIdx] = useState(() => Math.floor(Math.random()*Math.max(data.quotes.length,1)));
+  const quote = data.quotes[quoteIdx] || {text:"Add a self-care reminder to see it here."};
+
+  const shuffle = () => {
+    if(data.quotes.length<2) return;
+    let i;
+    do{ i = Math.floor(Math.random()*data.quotes.length); } while(i===quoteIdx);
+    setQuoteIdx(i);
+  };
+
+  const toggleTask = (id) => setData(d => ({...d, tasks: d.tasks.map(t=>t.id===id?{...t,done:!t.done}:t)}));
+  const toggleClean = (id) => setData(d => ({...d, cleaning: d.cleaning.map(c=>c.id===id?{...c,done:!c.done}:c)}));
+  const toggleHabitToday = (id) => {
+    const day = todayKey();
+    setData(d => ({...d, habits: d.habits.map(h=>h.id===id?{...h, history:{...h.history, [day]: !h.history[day]}}:h)}));
+  };
+
+  const topTasks = [...data.tasks].filter(t=>!t.done)
+    .sort((a,b)=>({high:0,medium:1,low:2}[a.priority]-{high:0,medium:1,low:2}[b.priority])).slice(0,3);
+  const cleaningToday = data.cleaning.filter(c=>!c.done).slice(0,4);
+
+  return (
+    <div>
+      <SectionHeader label="Today" color="var(--tasks)" count={new Date().toLocaleDateString(undefined, {weekday:'long', month:'long', day:'numeric'})} />
+
+      <div className="affirmation-card">
+        <p className="affirmation-text">{quote.text}</p>
+        <button className="shuffle-btn" onClick={shuffle} title="Show another">⟳</button>
+      </div>
+
+      <div className="grid-2">
+        <div className="module">
+          <div className="module-header">
+            <h3><span className="dot" style={{background:"var(--tasks)"}}></span>Top priorities</h3>
+            <button className="module-link" onClick={()=>setActive("tasks")}>All tasks →</button>
+          </div>
+          {topTasks.length===0 && <div style={{fontSize:13, color:"var(--text-faint)"}}>Nothing pressing — nice.</div>}
+          {topTasks.map(t => (
+            <div key={t.id} className="item-row" style={{marginBottom:8}}>
+              <Checkbox checked={t.done} onClick={()=>toggleTask(t.id)} color="var(--tasks)" />
+              <div className="item-text" style={{fontSize:13.5}}>{t.text}</div>
+            </div>
+          ))}
+        </div>
+
+        <div className="module">
+          <div className="module-header">
+            <h3><span className="dot" style={{background:"var(--cleaning)"}}></span>Cleaning</h3>
+            <button className="module-link" onClick={()=>setActive("cleaning")}>Full schedule →</button>
+          </div>
+          {cleaningToday.length===0 && <div style={{fontSize:13, color:"var(--text-faint)"}}>All caught up.</div>}
+          {cleaningToday.map(c => (
+            <div key={c.id} className="item-row" style={{marginBottom:8}}>
+              <Checkbox checked={c.done} onClick={()=>toggleClean(c.id)} color="var(--cleaning)" />
+              <div className="item-text" style={{fontSize:13.5}}>{c.text}</div>
+            </div>
+          ))}
+        </div>
+
+        <div className="module">
+          <div className="module-header">
+            <h3><span className="dot" style={{background:"var(--habits)"}}></span>Habits today</h3>
+            <button className="module-link" onClick={()=>setActive("habits")}>Full tracker →</button>
+          </div>
+          {data.habits.length===0 && <div style={{fontSize:13, color:"var(--text-faint)"}}>No habits added yet.</div>}
+          {data.habits.map(h => {
+            const on = !!h.history[todayKey()];
+            return (
+              <div key={h.id} className="item-row" style={{marginBottom:8}}>
+                <Checkbox checked={on} onClick={()=>toggleHabitToday(h.id)} color="var(--habits)" />
+                <div className="item-text" style={{fontSize:13.5}}>{h.name}</div>
+                <div style={{fontSize:12, color:"var(--habits)", fontWeight:700}}>🔥{computeStreak(h.history)}</div>
+              </div>
+            );
+          })}
+        </div>
+
+        <div className="module">
+          <div className="module-header">
+            <h3><span className="dot" style={{background:"var(--goals)"}}></span>Goal progress</h3>
+            <button className="module-link" onClick={()=>setActive("goals")}>All goals →</button>
+          </div>
+          {data.goals.length===0 && <div style={{fontSize:13, color:"var(--text-faint)"}}>No goals set yet.</div>}
+          {data.goals.slice(0,3).map(g => {
+            const total = g.milestones.length;
+            const done = g.milestones.filter(m=>m.done).length;
+            const pct = total ? Math.round((done/total)*100) : 0;
+            return (
+              <div key={g.id} style={{marginBottom:10}}>
+                <div style={{fontSize:13.5, marginBottom:4}}>{g.title}</div>
+                <div className="progress-track">
+                  <div className="progress-fill" style={{width:pct+"%", background:"var(--goals)"}}></div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ---------- Shared Section Header ---------- */
+function SectionHeader({label, color, count}){
+  return (
+    <div style={{marginBottom:22}}>
+      <div className="section-header">
+        <h1>{label}</h1>
+        {count && <span className="section-count">{count}</span>}
+      </div>
+      <div className="section-underline" style={{background:color}}></div>
+    </div>
+  );
+}
+
+/* ---------- App ---------- */
+function App(){
+  const [active, setActive] = useState("dashboard");
+  const [data, setData, saveState] = useAppData();
+
+  const exportData = () => {
+    const blob = new Blob([JSON.stringify(data, null, 2)], {type:"application/json"});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "focus-base-backup-" + todayKey() + ".json";
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const importData = (e) => {
+    const file = e.target.files[0];
+    if(!file) return;
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+      try{
+        const parsed = JSON.parse(evt.target.result);
+        setData({...defaultData(), ...migrateData(parsed)});
+      }catch(err){
+        alert("Couldn't read that file — make sure it's a backup exported from this planner.");
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = "";
+  };
+
+  let view;
+  if(active==="dashboard") view = <Dashboard data={data} setData={setData} setActive={setActive} />;
+  else if(active==="tasks") view = <TasksView data={data} setData={setData} />;
+  else if(active==="cleaning") view = <CleaningView data={data} setData={setData} />;
+  else if(active==="habits") view = <HabitsView data={data} setData={setData} />;
+  else if(active==="reading") view = <MediaSection data={data} setData={setData} storeKey="books" label="Reading" colorVar="var(--media)" addPlaceholder="Add a book title…" />;
+  else if(active==="movies") view = <MediaSection data={data} setData={setData} storeKey="movies" label="Movies & Shows" colorVar="var(--movies)" addPlaceholder="Add a movie or show…" />;
+  else if(active==="selfcare") view = <SelfCareView data={data} setData={setData} />;
+  else if(active==="goals") view = <GoalsView data={data} setData={setData} />;
+  else if(active==="notes") view = <NotesView data={data} setData={setData} />;
+
+  return (
+    <div className="app">
+      <Sidebar active={active} setActive={setActive} onExport={exportData} onImport={importData} />
+      <div className="main">
+        {view}
+        {saveState==="unavailable" && (
+          <p style={{fontSize:12, color:"var(--text-faint)", marginTop:30}}>
+            Note: this browser is blocking local storage, so your data won't save automatically between visits. Use "Export backup" often, and "Import backup" to restore it.
+          </p>
+        )}
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+</script>
+</body>
+</html>
